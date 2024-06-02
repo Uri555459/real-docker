@@ -1,15 +1,24 @@
 const express = require('express')
+const { connectDb } = require('./helpers/db')
+const { port, host, db } = require('./configuration')
 
 const app = express()
 
-const port = process.env.PORT || 3000
-const host = process.env.HOST
+app.use(express.json())
+
+const startServer = () => {
+	app.listen(port, () => {
+		console.log(`Сервер API запущен на порту ${port}`)
+		console.log(`Хост ${host}`)
+		console.log(`Подключение к базе данных ${db}`)
+	})
+}
 
 app.get('/test', (req, res) => {
 	res.send('Сервер запущен и работает.')
 })
 
-app.listen(port, () => {
-	console.log(`Сервер API запущен на порту ${port}`)
-	console.log(`Хост ${host}`)
-})
+connectDb()
+	.on('error', console.log)
+	.on('disconnect', connectDb)
+	.once('open', startServer)
