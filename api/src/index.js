@@ -24,7 +24,6 @@ const startServer = () => {
 
 		const silence = new Post({ name: 'Silence' })
 		const newSilence = await silence.save()
-		console.log('newSilence: ', newSilence)
 	})
 }
 
