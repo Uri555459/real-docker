@@ -1,23 +1,38 @@
-const express = require('express')
-const { connectDb } = require('./helpers/db')
-const { port, host } = require('./configuration')
+const express = require("express");
+const axios = require("axios");
+const { port, host, db, apiUrl } = require("./configuration");
+const { connectDb } = require("./helpers/db");
 
-const app = express()
+const app = express();
 
-app.use(express.json())
+app.get("/test", (req, res) => {
+  res.send("Our authentication server is working correctly");
+});
+
+app.get("/api/currentUser", (req, res) => {
+  res.json({
+    id: "1234",
+    email: "foo@gmail.com"
+  });
+});
+
+app.get("/testwithapidata", (req, res) => {
+  axios.get(apiUrl + "/testapidata").then(response => {
+    res.json({
+      testapidata: response.data.testapidata
+    });
+  });
+});
 
 const startServer = () => {
-	app.listen(port, async () => {
-		console.log(`Сервер AUTH запущен на порту ${port}`)
-		console.log(`Хост ${host}`)
-	})
-}
-
-app.get('/auth', (req, res) => {
-	res.send('Сервер AUTH запущен и работает.')
-})
+  app.listen(port, () => {
+    console.log(`Started authentication service on port ${port}`);
+    console.log(`Our host is ${host}`);
+    console.log(`Database url ${db}`);
+  });
+};
 
 connectDb()
-	.on('error', console.log)
-	.on('disconnect', connectDb)
-	.once('open', startServer)
+  .on("error", console.log)
+  .on("disconnected", connectDb)
+  .once("open", startServer);

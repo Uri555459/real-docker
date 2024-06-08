@@ -1,37 +1,50 @@
-const express = require('express')
-const mongoose = require('mongoose')
-const cors = require('cors')
-const { connectDb } = require('./helpers/db')
-const { port, host, db } = require('./configuration')
+const express = require("express");
+const mongoose = require("mongoose");
+const axios = require("axios");
+const { port, host, db, authApiUrl } = require("./configuration");
+const { connectDb } = require("./helpers/db");
 
-const app = express()
+const app = express();
+const kittySchema = new mongoose.Schema({
+  name: String
+});
+const Kitten = mongoose.model("Kitten", kittySchema);
 
-app.use(cors())
-app.use(express.json())
+app.get("/test", (req, res) => {
+  res.send("Our api server is working correctly");
+});
 
-const postSchema = new mongoose.Schema({ name: String })
-const Post = mongoose.model('Post', postSchema)
+app.get("/testapidata", (req, res) => {
+  res.json({
+    testapidata: true
+  });
+});
+
+app.get("/testwithcurrentuser", (req, res) => {
+  axios.get(authApiUrl + "/currentUser").then(response => {
+    res.json({
+      testwithcurrentuser: true,
+      currentUserFromAuth: response.data
+    });
+  });
+});
 
 const startServer = () => {
-	app.listen(3000, async () => {
-		console.log(`Сервер API запущен на порту ${port}`)
-		console.log(`Хост ${host}`)
-		console.log(`Подключение к базе данных ${db}`)
+  app.listen(port, () => {
+    console.log(`Started api service on port ${port}`);
+    console.log(`Our host is ${host}`);
+    console.log(`Database url ${db}`);
+    console.log(`Auth api url ${authApiUrl}`);
 
-		// const posts = await Post.find({})
-
-		// console.log('posts', posts)
-
-		const silence = new Post({ name: 'Silence' })
-		const newSilence = await silence.save()
-	})
-}
-
-app.get('/test', (req, res) => {
-	res.send('Сервер TEST запущен и работает.')
-})
+    const silence = new Kitten({ name: "Silence" });
+    silence.save(function(err, result) {
+      if (err) return console.error(err);
+      console.log("result with volumes", result);
+    });
+  });
+};
 
 connectDb()
-	.on('error', console.log)
-	.on('disconnect', connectDb)
-	.once('open', startServer)
+  .on("error", console.log)
+  .on("disconnected", connectDb)
+  .once("open", startServer);
